@@ -2,8 +2,38 @@
 
 output_file="$HOME/.config/omarchy/current/theme/zen.css"
 
-if ! command -v zen-browser >/dev/null 2>&1; then
+# Detect available Zen launcher command across variants
+zen_cmd=""
+for _c in zen-browser zen zen-bin zen-twilight zen-beta; do
+    if command -v "$_c" >/dev/null 2>&1; then
+        zen_cmd="$_c"
+        break
+    fi
+done
+
+if [[ -z "$zen_cmd" ]]; then
     skipped "Zen Browser"
+fi
+
+# Detect the actual process name (e.g., zen-bin)
+zen_proc=""
+for _p in zen-bin zen zen-twilight zen-beta zen-browser; do
+    if pgrep -x "$_p" >/dev/null 2>&1; then
+        zen_proc="$_p"
+        break
+    fi
+done
+[[ -z "$zen_proc" ]] && zen_proc="$zen_cmd"
+
+# fallback in case colors aren't in the environment
+if [[ -z "$primary_background" ]]; then
+    _colors_file="$HOME/.config/omarchy/current/theme/colors.toml"
+    _ec() { awk -v c="$1" '$1==c&&/=/{if(match($0,/#([0-9a-fA-F]{6})/)){print substr($0,RSTART+1,6);exit}}' "$_colors_file"; }
+    primary_background=$(_ec "background"); primary_foreground=$(_ec "foreground")
+    normal_white=$(_ec "color7");   bright_white=$(_ec "color15")
+    normal_red=$(_ec "color1");     normal_yellow=$(_ec "color3");  bright_yellow=$(_ec "color11")
+    normal_green=$(_ec "color2");   normal_cyan=$(_ec "color6")
+    normal_blue=$(_ec "color4");    normal_magenta=$(_ec "color5"); bright_red=$(_ec "color9")
 fi
 
 find_default_profile() {
@@ -299,16 +329,16 @@ body {
 EOF
 fi
 
-if pgrep -x "zen-browser" > /dev/null; then
-    pkill -x "zen-browser" > /dev/null
+if pgrep -x "$zen_proc" > /dev/null; then
+    pkill -x "$zen_proc" > /dev/null
     sleep 2
-    if pgrep -x "zen-browser" > /dev/null; then
-        pkill -9 -x "zen-browser" > /dev/null
+    if pgrep -x "$zen_proc" > /dev/null; then
+        pkill -9 -x "$zen_proc" > /dev/null
         sleep 1
     fi
-    zen-browser > /dev/null &
+    "$zen_cmd" > /dev/null &
 fi
 
-require_restart "zen-browser"
+require_restart "$zen_proc"
 success "Zen Browser theme updated!"
 exit 0
