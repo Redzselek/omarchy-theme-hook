@@ -1,6 +1,8 @@
 #!/bin/bash
 
-output_file="$HOME/.config/omarchy/current/theme/vencord.theme.css"
+source "${THEME_HOOK_LIB:-$HOME/.config/omarchy/hooks/theme-set.lib.sh}"
+
+output_file="$omarchy_theme_dir/vencord.theme.css"
 possible_paths=(
     "$HOME/.config/Vencord/themes"
     "$HOME/.config/vesktop/themes"
@@ -62,13 +64,13 @@ EOF
 }
 
 check_for_theme() {
-    if [[ -f $HOME/.config/omarchy/current/theme/vencord.theme.css ]]; then
+    if [[ -f $omarchy_theme_dir/vencord.theme.css ]]; then
         for path in "${possible_paths[@]}"; do
             if [ -d "$path" ]; then
                 if [[ -f "$path/vencord.theme.css" ]]; then
                     rm "$path/vencord.theme.css"
                 fi
-                cp -f $HOME/.config/omarchy/current/theme/vencord.theme.css "$path/vencord.theme.css"
+                cp -f $omarchy_theme_dir/vencord.theme.css "$path/vencord.theme.css"
             fi
 
             for file in "$path"/*; do
